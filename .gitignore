@@ -1,0 +1,65 @@
+# -----------------------
+# FRONTEND (React / Vite)
+# -----------------------
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.cache/
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+
+# -----------------------
+# BACKEND (Flask / Python)
+# -----------------------
+backend/__pycache__/
+backend/**/*.pyc
+backend/**/*.pyo
+backend/**/*.pyd
+backend/*.db
+backend/*.sqlite3
+
+# Python virtual environments
+.venv/
+venv/
+env/
+
+# -----------------------
+# ENV FILES (IMPORTANT 🔐)
+# -----------------------
+.env
+.env.*
+
+# -----------------------
+# IDE / EDITOR
+# -----------------------
+.vscode/
+.idea/
+
+# -----------------------
+# OS FILES
+# -----------------------
+.DS_Store
+
+# -----------------------
+# LOGS
+# -----------------------
+*.log
+
+# -----------------------
+# DATABASE / DUMPS
+# -----------------------
+*.sql
+
+# -----------------------
+# CACHE / TEST
+# -----------------------
+.coverage
+.cache/
+.pytest_cache/
+
+# -----------------------
+# MISC
+# -----------------------
+*.swp
