@@ -20,6 +20,7 @@ app.register_blueprint(notifications_bp)
 app.register_blueprint(friends_bp)
 
 if __name__ == "__main__":
+    # database import for the first time 
     # with app.app_context():
     #     db.create_all()   
 
