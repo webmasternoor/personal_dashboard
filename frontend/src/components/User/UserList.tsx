@@ -1,43 +1,28 @@
-// src/components/User/UserList.tsx
-import React, { useState, useEffect } from 'react';
+// frontend/src/components/User/UserList.tsx
+import React, { useState } from 'react';
+import './user.css'; // Import external CSS
 
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  status: string; // e.g., 'Active', 'Inactive'
-  created_at: string; // Assuming a date string
-}
+// Import User interface from where it's defined (e.g., userService or a shared types file)
+import { User } from '../../api/user/userService';
 
 interface UserListProps {
-  users: User[]; // <-- Add this line to accept the users array
+  users: User[];
   onEdit: (user: User) => void;
   onDelete: (userId: number) => Promise<void>;
-  fetchUsers: () => Promise<User[]>; // Function to fetch users
+  loading: boolean; // Added loading state
+  error: string | null; // Added error state
+  // fetchUsers prop is removed if not used internally by UserList
 }
 
-const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, fetchUsers }) => { // <-- Destructure users here
-  // ... rest of your UserList component code ...
-
+const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, loading, error }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState<{ key: keyof User; direction: 'ascending' | 'descending' } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage] = useState(10); // Number of users per page
-
-  // Remove the local 'users' state and the useEffect that fetches users,
-  // as these are now managed by UserManagement and passed as props.
-  // const [users, setUsers] = useState<User[]>([]);
-  // useEffect(() => {
-  //   const loadUsers = async () => {
-  //     const fetchedUsers = await fetchUsers();
-  //     setUsers(fetchedUsers);
-  //   };
-  //   loadUsers();
-  // }, [fetchUsers]);
+  const usersPerPage = 10;
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
-    setCurrentPage(1); // Reset to first page on search
+    setCurrentPage(1);
   };
 
   const requestSort = (key: keyof User) => {
@@ -49,13 +34,10 @@ const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, fetchUsers
   };
 
   const getSortIndicator = (key: keyof User) => {
-    if (!sortConfig || sortConfig.key !== key) {
-      return '';
-    }
+    if (!sortConfig || sortConfig.key !== key) return '';
     return sortConfig.direction === 'ascending' ? ' ▲' : ' ▼';
   };
 
-  // Filter and sort based on the 'users' prop received
   const filteredUsers = users.filter(user =>
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -63,26 +45,19 @@ const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, fetchUsers
 
   const sortedUsers = [...filteredUsers].sort((a, b) => {
     if (!sortConfig) return 0;
-    // Ensure we are comparing values correctly, especially for dates/numbers
     const aValue = a[sortConfig.key];
     const bValue = b[sortConfig.key];
 
-    if (aValue < bValue) {
-      return sortConfig.direction === 'ascending' ? -1 : 1;
-    }
-    if (aValue > bValue) {
-      return sortConfig.direction === 'ascending' ? 1 : -1;
-    }
+    if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
+    if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
     return 0;
   });
 
-  // Pagination logic
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
   const currentUsers = sortedUsers.slice(indexOfFirstUser, indexOfLastUser);
 
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
-
   const totalPages = Math.ceil(sortedUsers.length / usersPerPage);
 
   const handleClearFilters = () => {
@@ -91,63 +66,57 @@ const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, fetchUsers
     setCurrentPage(1);
   };
 
+  // Conditional rendering for loading and error states
+  if (loading) return <p className="message message-info">Loading users...</p>;
+  if (error) return <p className="message message-error">Error: {error}</p>;
+  if (users.length === 0 && !loading && !error) return <p className="message message-info">No users found.</p>;
+
+
   return (
-    <div style={{ margin: "20px auto", textAlign: "center", maxWidth: "900px" }}>
+    <div className="user-list-container">
       <h2>User List</h2>
-      <div style={{ marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+      <div className="search-filter-bar">
         <input
           type="text"
           placeholder="Search by Name or Email..."
           value={searchTerm}
           onChange={handleSearchChange}
-          style={{ padding: "10px", border: "1px solid #ccc", borderRadius: "4px", flexGrow: 1 }}
+          className="search-input"
         />
-        <button onClick={handleClearFilters} style={{ padding: "10px 15px", backgroundColor: "#f0ad4e", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}>
+        <button onClick={handleClearFilters} className="btn btn-clear-filters">
           Clear Filters
         </button>
       </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "20px" }}>
+      <table className="user-table">
         <thead>
           <tr>
-            <th onClick={() => requestSort('id')} style={{ cursor: "pointer", padding: "12px", border: "1px solid #ddd", backgroundColor: "#f2f2f2" }}>
-              ID{getSortIndicator('id')}
-            </th>
-            <th onClick={() => requestSort('username')} style={{ cursor: "pointer", padding: "12px", border: "1px solid #ddd", backgroundColor: "#f2f2f2" }}>
-              Name{getSortIndicator('username')}
-            </th>
-            <th style={{ padding: "12px", border: "1px solid #ddd", backgroundColor: "#f2f2f2" }}>
-              Email
-            </th>
-            <th onClick={() => requestSort('status')} style={{ cursor: "pointer", padding: "12px", border: "1px solid #ddd", backgroundColor: "#f2f2f2" }}>
-              Status{getSortIndicator('status')}
-            </th>
-            <th onClick={() => requestSort('created_at')} style={{ cursor: "pointer", padding: "12px", border: "1px solid #ddd", backgroundColor: "#f2f2f2" }}>
-              Created Date{getSortIndicator('created_at')}
-            </th>
-            <th style={{ padding: "12px", border: "1px solid #ddd", backgroundColor: "#f2f2f2" }}>
-              Actions
-            </th>
+            <th onClick={() => requestSort('id')}>ID{getSortIndicator('id')}</th>
+            <th onClick={() => requestSort('username')}>Name{getSortIndicator('username')}</th>
+            <th>Email</th>
+            <th onClick={() => requestSort('status')}>Status{getSortIndicator('status')}</th>
+            <th onClick={() => requestSort('created_at')}>Created Date{getSortIndicator('created_at')}</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {currentUsers.length > 0 ? (
             currentUsers.map(user => (
               <tr key={user.id}>
-                <td style={{ padding: "10px", border: "1px solid #ddd" }}>{user.id}</td>
-                <td style={{ padding: "10px", border: "1px solid #ddd" }}>{user.username}</td>
-                <td style={{ padding: "10px", border: "1px solid #ddd" }}>{user.email}</td>
-                <td style={{ padding: "10px", border: "1px solid #ddd" }}>{user.status}</td>
-                <td style={{ padding: "10px", border: "1px solid #ddd" }}>{new Date(user.created_at).toLocaleDateString()}</td>
-                <td style={{ padding: "10px", border: "1px solid #ddd" }}>
-                  <button onClick={() => onEdit(user)} style={{ marginRight: "5px", padding: "5px 10px", cursor: "pointer", backgroundColor: "#007bff", color: "white", border: "none", borderRadius: "3px" }}>Edit</button>
-                  <button onClick={() => onDelete(user.id)} style={{ padding: "5px 10px", cursor: "pointer", backgroundColor: "#dc3545", color: "white", border: "none", borderRadius: "3px" }}>Delete</button>
+                <td>{user.id}</td>
+                <td>{user.username}</td>
+                <td>{user.email}</td>
+                <td>{user.status}</td>
+                <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                <td className="actions">
+                  <button onClick={() => onEdit(user)} className="btn-edit">Edit</button>
+                  <button onClick={() => onDelete(user.id)} className="btn-delete">Delete</button>
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan={6} style={{ padding: "10px", textAlign: "center", fontStyle: "italic" }}>
+              <td colSpan={6}>
                 {searchTerm ? "No users found matching your search criteria." : "No users available."}
               </td>
             </tr>
@@ -155,31 +124,19 @@ const UserList: React.FC<UserListProps> = ({ users, onEdit, onDelete, fetchUsers
         </tbody>
       </table>
 
-      {/* Pagination */}
       {totalPages > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: "5px", marginTop: "20px" }}>
-          <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1} style={{ padding: "8px 12px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "4px" }}>
-            Previous
-          </button>
+        <div className="pagination">
+          <button onClick={() => paginate(currentPage - 1)} disabled={currentPage === 1}>Previous</button>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNumber => (
             <button
               key={pageNumber}
               onClick={() => paginate(pageNumber)}
-              style={{
-                padding: "8px 12px",
-                cursor: "pointer",
-                border: "1px solid #ccc",
-                borderRadius: "4px",
-                backgroundColor: currentPage === pageNumber ? "#007bff" : "white",
-                color: currentPage === pageNumber ? "white" : "black"
-              }}
+              className={currentPage === pageNumber ? "active-page" : ""}
             >
               {pageNumber}
             </button>
           ))}
-          <button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages} style={{ padding: "8px 12px", cursor: "pointer", border: "1px solid #ccc", borderRadius: "4px" }}>
-            Next
-          </button>
+          <button onClick={() => paginate(currentPage + 1)} disabled={currentPage === totalPages}>Next</button>
         </div>
       )}
     </div>
