@@ -1,163 +1,135 @@
-// src/components/User/UserManagement.tsx
+// frontend/src/components/User/UserManagement.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import UserForm from './UserForm';
 import UserList from './UserList';
+import './user.css'; // Import external CSS
 
-// Define the User interface here if not already defined globally
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  status: string; // e.g., 'Active', 'Inactive'
-  created_at: string; // Assuming a date string
-}
+// Import User interface from the API service file where it's defined and exported
+import { User } from '../../api/user/userService';
+import { fetchUsersApi, createUserApi, updateUserApi, deleteUserApi } from '../../api/user/userService';
 
 const UserManagement: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [users, setUsers] = useState<User[]>([]); // State to hold users for UserList
-  const [message, setMessage] = useState(""); // For general feedback
+  const [users, setUsers] = useState<User[]>([]);
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false); // Added loading state
+  const [error, setError] = useState<string | null>(null); // Added error state
 
-  // --- API Interaction Functions ---
-
-  const fetchUsers = useCallback(async () => {
+  const fetchUsers = useCallback(async (): Promise<User[]> => {
+    setLoading(true);
+    setError(null);
     try {
-      // Ensure your Flask API returns the full User object as expected by the User interface
-      const response = await fetch("http://127.0.0.1:5000/users");
-      if (!response.ok) {
-        throw new Error("Failed to fetch users");
-      }
-      const data: User[] = await response.json();
+      const data = await fetchUsersApi();
       setUsers(data);
+      setMessage("Users loaded successfully");
       return data;
-    } catch (error: any) {
-      console.error("Error fetching users:", error);
-      setMessage(`Error loading users: ${error.message}`);
+    } catch (err: any) {
+      console.error("Error fetching users:", err);
+      setError(`Failed to load users: ${err.message}`);
+      setMessage(""); // Clear message on error
       return [];
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   const createUser = async (userData: { username: string; email: string; password?: string }) => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch("http://127.0.0.1:5000/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      });
-
-      if (!response.ok) {
-        let errorMessage = "Failed to create user";
-        try {
-          // Attempt to parse JSON error message from Flask
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorData.message || "Failed to create user";
-        } catch (parseError) {
-          // If response is not JSON, use status text or a default
-          errorMessage = response.statusText || "Failed to create user";
-        }
-        throw new Error(errorMessage);
-      }
-
-      await fetchUsers(); // Refresh the list
-      setShowForm(false); // Close form after successful creation
+      await createUserApi(userData);
+      await fetchUsers();
+      setShowForm(false);
       setEditingUser(null);
-      setMessage("User created successfully"); // Set a general success message
-      return { success: true, message: "User created successfully" };
+      setMessage("User created successfully");
     } catch (error: any) {
       console.error("Error creating user:", error);
-      setMessage(`Error: ${error.message}`); // Display the specific error message
-      throw error; // Re-throw to be caught by UserForm
+      setError(`Failed to create user: ${error.message}`);
+      setMessage(""); // Clear message on error
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const updateUser = async (userId: number, userData: { username: string; email: string }) => {
+    setLoading(true);
+    setError(null);
     try {
-      const response = await fetch(`http://127.0.0.1:5000/users/${userId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(userData),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to update user");
-      }
-      await fetchUsers(); // Refresh the list
+      await updateUserApi(userId, userData);
+      await fetchUsers();
       setShowForm(false);
       setEditingUser(null);
-      setMessage("User updated successfully"); // Set a general message
-      return { success: true, message: "User updated successfully" };
+      setMessage("User updated successfully");
     } catch (error: any) {
       console.error("Error updating user:", error);
-      setMessage(`Error: ${error.message}`); // Display error message
-      throw error; // Re-throw to be caught by UserForm
+      setError(`Failed to update user: ${error.message}`);
+      setMessage(""); // Clear message on error
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const deleteUser = async (userId: number) => {
+    setLoading(true);
+    setError(null);
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
-        const response = await fetch(`http://127.0.0.1:5000/users/${userId}`, {
-          method: "DELETE",
-        });
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || "Failed to delete user");
-        }
-        await fetchUsers(); // Refresh the list
-        setMessage("User deleted successfully"); // Set a general message
+        await deleteUserApi(userId);
+        await fetchUsers();
+        setMessage("User deleted successfully");
       } catch (error: any) {
         console.error("Error deleting user:", error);
-        setMessage(`Error: ${error.message}`); // Display error message
+        setError(`Failed to delete user: ${error.message}`);
+        setMessage(""); // Clear message on error
+      } finally {
+        setLoading(false);
       }
+    } else {
+      setLoading(false); // If cancelled, stop loading state
     }
   };
 
-  // Handler to prepare for editing
   const handleEdit = (user: User) => {
     setEditingUser(user);
     setShowForm(true);
   };
 
-  // Handler to close the form
   const handleCancelForm = () => {
     setShowForm(false);
     setEditingUser(null);
   };
 
-  // Handler for the form submission (either create or update)
   const handleFormSubmit = async (userData: { username: string; email: string; password?: string }) => {
     if (editingUser) {
-      // Update existing user
       await updateUser(editingUser.id, { username: userData.username, email: userData.email });
     } else {
-      // Create new user
       await createUser(userData);
     }
   };
 
-  // Initial fetch of users when the component mounts
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
+
+
+  const handleAddUserClick = () => {
+    setEditingUser(null);
+    setShowForm(true);
+  };
+
+
   return (
-    <div style={{ padding: "20px" }}>
+    <div className="user-management-container">
       <h1>User Management</h1>
 
-      {/* Button to show the form for adding a new user */}
       {!showForm && (
-        <button
-          onClick={() => {
-            setEditingUser(null); // Ensure no user is pre-selected for editing
-            setShowForm(true);
-          }}
-          style={{ marginBottom: "20px", padding: "10px 15px", backgroundColor: "#28a745", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
-        >
-          Add New User
-        </button>
+        <button onClick={handleAddUserClick} className="btn btn-primary btn-add-user"> Add New User </button>
       )}
 
-      {/* Display the form if showForm is true */}
       {showForm && (
         <UserForm
           formTitle={editingUser ? "Edit User" : "Create New User"}
@@ -168,16 +140,14 @@ const UserManagement: React.FC = () => {
         />
       )}
 
-      {/* Display the user list */}
       <UserList
-        users={users} // Pass users state to UserList
+        users={users}
         onEdit={handleEdit}
         onDelete={deleteUser}
-        fetchUsers={fetchUsers} // Pass fetchUsers to UserList for its internal use
+        loading={loading}
+        error={error}
       />
-
-      {/* Display general messages */}
-      {message && <p style={{ marginTop: "20px", color: message.startsWith("✅") ? "green" : "red" }}>{message}</p>}
+      {message && <p className={`message ${message.startsWith("✅") ? "message-success" : "message-error"}`}>{message}</p>}
     </div>
   );
 }

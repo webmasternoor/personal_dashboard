@@ -1,0 +1,244 @@
+/* frontend/src/components/User/user.css */
+
+.user-management-container {
+    padding: 20px;
+    font-family: sans-serif;
+  }
+  
+  .user-management-container h1 {
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
+  }
+  
+  .btn-primary {
+    background-color: #28a745; /* Green for Add */
+    color: white;
+  }
+  
+  .btn-primary:hover {
+    background-color: #218838;
+  }
+  
+  .btn-add-user {
+    margin-bottom: 20px;
+    display: inline-block; /* Ensure it behaves like a block element for margin */
+  }
+  
+  .message {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 4px;
+  }
+  
+  .message-success {
+    color: #155724;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+  }
+  
+  .message-error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+  }
+  
+  /* Styles for UserForm (assuming UserForm also uses this CSS or has its own) */
+  .user-form-container { /* Example class for UserForm */
+    max-width: 400px;
+    margin: 20px auto;
+    text-align: center;
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 8px;
+  }
+  
+  .user-form-container h2 {
+    margin-bottom: 15px;
+    color: #555;
+  }
+  
+  .user-form-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .user-form-container input[type="text"],
+  .user-form-container input[type="email"],
+  .user-form-container input[type="password"] {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .user-form-container button[type="submit"] {
+    background-color: #007bff; /* Blue for Submit */
+    color: white;
+  }
+  
+  .user-form-container button[type="submit"]:hover {
+    background-color: #0056b3;
+  }
+  
+  .user-form-container button[type="button"] {
+    background-color: #6c757d; /* Gray for Cancel */
+    color: white;
+  }
+  
+  .user-form-container button[type="button"]:hover {
+    background-color: #5a6268;
+  }
+  
+  /* Styles for UserList (assuming UserList also uses this CSS or has its own) */
+  .user-list-container { /* Example class for UserList */
+    margin: 20px auto;
+    text-align: center;
+    max-width: 900px;
+  }
+  
+  .user-list-container h2 {
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  .search-filter-bar {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .search-filter-bar input[type="text"] {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    flex-grow: 1;
+    font-size: 1rem;
+  }
+  
+  .btn-clear-filters {
+    background-color: #f0ad4e; /* Orange for Clear */
+    color: white;
+  }
+  
+  .btn-clear-filters:hover {
+    background-color: #d39e40;
+  }
+  
+  .user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  .user-table th,
+  .user-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+  }
+  
+  .user-table th {
+    background-color: #f2f2f2;
+    cursor: pointer;
+    font-weight: bold;
+    position: relative; /* For sort indicators */
+  }
+  
+  .user-table th:hover {
+    background-color: #e8e8e8;
+  }
+  
+  .sort-indicator {
+    margin-left: 5px;
+    font-size: 0.8em;
+    color: #666;
+  }
+  
+  .user-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  
+  .user-table td:last-child {
+    white-space: nowrap; /* Prevent actions from wrapping */
+  }
+  
+  .user-table .actions button {
+    margin-right: 5px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+  
+  .actions .btn-edit {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .actions .btn-edit:hover {
+    background-color: #0056b3;
+  }
+  
+  .actions .btn-delete {
+    background-color: #dc3545;
+    color: white;
+  }
+  
+  .actions .btn-delete:hover {
+    background-color: #c82333;
+  }
+  
+  .user-table td[colspan="6"] {
+    font-style: italic;
+    color: #666;
+  }
+  
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 20px;
+  }
+  
+  .pagination button {
+    padding: 8px 12px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    color: #333;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  
+  .pagination button:hover:not(:disabled) {
+    background-color: #e0e0e0;
+  }
+  
+  .pagination button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  .pagination .active-page {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+  }
+  
+  .pagination .active-page:hover {
+    background-color: #0056b3;
+  }
